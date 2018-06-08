@@ -1,7 +1,7 @@
 -- libunbound based net.adns replacement for Prosody IM
 -- Copyright (C) 2013-2015 Kim Alvefur
 --
--- This file is MIT/X11 licensed.
+-- This file is MIT licensed.
 --
 -- luacheck: ignore prosody
 
@@ -17,7 +17,7 @@ local truop = function() return true; end;
 
 local log = require "util.logger".init("unbound");
 local net_server = require "net.server";
-local libunbound = require"util.lunbound";
+local libunbound = require"lunbound";
 
 local gettime = require"socket".gettime;
 local dns_utils = require"util.dns";
@@ -192,7 +192,7 @@ local function not_implemented()
 	error "not implemented";
 end
 -- Public API
-return {
+local _M = {
 	lookup = lookup,
 	cancel = cancel;
 	new_async_socket = not_implemented;
@@ -212,3 +212,14 @@ return {
 	};
 };
 
+local wrapper = {
+	lookup = function (_, callback, qname, qtype, qclass)
+		return lookup(callback, qname, qtype, qclass)
+	end
+}
+
+function _M.resolver()
+	return wrapper;
+end
+
+return _M;
