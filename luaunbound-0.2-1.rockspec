@@ -1,16 +1,16 @@
 -- This file was automatically generated for the LuaDist project.
 
 package = "luaunbound"
-version = "0.1-2"
+version = "0.2-1"
 -- LuaDist source
 source = {
-  tag = "0.1-2",
+  tag = "0.2-1",
   url = "git://github.com/LuaDist-testing/luaunbound.git"
 }
 -- Original source
 -- source = {
 -- 	url = "hg+http://code.zash.se/luaunbound/",
--- 	tag = "0.1"
+-- 	tag = "0.2"
 -- }
 description = {
 	summary = "A binding to libunbound",
