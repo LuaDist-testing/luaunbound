@@ -145,16 +145,20 @@ static int lub_ctx_destroy(lua_State *L) {
 	lua_settop(L, 1);
 	lua_getuservalue(L, 1);
 	lua_pushnil(L);
+
 	while(lua_next(L, 2) != 0) {
 		lua_pop(L, 1);
+
 		if(lua_type(L, -2) == LUA_TUSERDATA) {
 			cb_data *my_data = lua_touserdata(L, -2);
+
 			if(my_data->state == 0) {
 				ub_cancel(*ctx, my_data->async_id);
 				my_data->state = 2;
 			}
 		}
 	}
+
 	ub_ctx_delete(*ctx);
 	return 0;
 }
@@ -162,6 +166,32 @@ static int lub_ctx_destroy(lua_State *L) {
 static int lub_ctx_tostring(lua_State *L) {
 	struct ub_ctx **ctx = luaL_checkudata(L, 1, "ub_ctx");
 	lua_pushfstring(L, "ub_ctx: %p", ctx);
+	return 1;
+}
+
+static int lub_query_tostring(lua_State *L) {
+	cb_data *my_data = luaL_checkudata(L, 1, "ub_query");
+	char *state;
+
+	switch(my_data->state) {
+		case 0:
+			state = "pending";
+			break;
+
+		case 1:
+			state = "ready";
+			break;
+
+		case 2:
+			state = "done";
+			break;
+
+		default:
+			state = "unknown";
+			break;
+	}
+
+	lua_pushfstring(L, "ub_query.%s(%d): %p", state, my_data->async_id, my_data);
 	return 1;
 }
 
@@ -328,7 +358,7 @@ static int lub_cancel(lua_State *L) {
 	lua_getuservalue(L, 1);
 	lua_pushvalue(L, 2);
 	lua_pushnil(L);
-	lua_settable(L, 4);
+	lua_settable(L, 3);
 
 	lua_pushboolean(L, 1);
 	return 1;
@@ -435,6 +465,14 @@ static luaL_Reg ctx_methods[] = {
 };
 
 /*
+ * Query metatable
+ */
+static luaL_Reg query_mt[] = {
+	{"__tostring", lub_query_tostring},
+	{NULL, NULL}
+};
+
+/*
  * Exported module functions
  */
 static luaL_Reg lub_lib_funcs[] = {
@@ -457,6 +495,11 @@ int luaopen_lunbound(lua_State *L) {
 	lua_createtable(L, 0, 7);
 	luaL_setfuncs(L, ctx_methods, 0);
 	lua_setfield(L, -2, "__index");
+	lua_pop(L, 1);
+
+	/* Metatable for queries */
+	luaL_newmetatable(L, "ub_query");
+	luaL_setfuncs(L, query_mt, 0);
 	lua_pop(L, 1);
 
 	/* Main module table */
